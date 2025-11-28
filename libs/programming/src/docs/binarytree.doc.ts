@@ -1,0 +1,25 @@
+import { definePrefabKnowledge } from '@dsl/knowledge'
+
+export default definePrefabKnowledge((utils) => {
+  utils.name('binarytree')
+  utils.description('A visual binary tree data structure with automatic layout. Supports BST operations, traversal visualization, and node highlighting.')
+  
+  utils.prop('root').describe('Root node of the tree. Each node has value, left, and right properties.').type('TreeNode | null')
+  utils.prop('values').describe('Alternative: Array representation where index i has children at 2i+1 and 2i+2.').type('(number | string | null)[]').optional()
+  utils.prop('type').describe('Type of binary tree for validation/operations.').type('"binary" | "bst" | "avl" | "heap"').optional('"binary"')
+  utils.prop('highlight').describe('Array of node values to highlight.').type('(number | string)[]').optional('[]')
+  utils.prop('highlightColor').describe('Color for highlighted nodes.').type('string').optional('"warning"')
+  utils.prop('current').describe('Currently active node value (for traversal).').type('number | string').optional()
+  utils.prop('currentColor').describe('Color for current node.').type('string').optional('"primary"')
+  utils.prop('visited').describe('Array of visited node values in traversal order.').type('(number | string)[]').optional('[]')
+  utils.prop('visitedColor').describe('Color for visited nodes.').type('string').optional('"secondary"')
+  utils.prop('path').describe('Array of node values forming a path (e.g., search path).').type('(number | string)[]').optional('[]')
+  utils.prop('pathColor').describe('Color for path nodes.').type('string').optional('"success"')
+  utils.prop('showValues').describe('Whether to show values inside nodes.').type('boolean').optional('true')
+  utils.prop('showEdgeLabels').describe('Whether to show L/R labels on edges.').type('boolean').optional('false')
+  utils.prop('x').describe('X position of tree root on canvas.').type('number').optional('0')
+  utils.prop('y').describe('Y position of tree root on canvas.').type('number').optional('0')
+  utils.prop('levelHeight').describe('Vertical spacing between tree levels.').type('number').optional('80')
+  utils.prop('nodeRadius').describe('Radius of tree nodes.').type('number').optional('25')
+  utils.prop('label').describe('Label text above the tree.').type('string').optional()
+})

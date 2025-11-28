@@ -1,0 +1,83 @@
+# Docker Compose for ChatTutor Development
+# Run with: docker compose -f docker-compose.dev.yml up -d
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: chattutor-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: chattutor
+      POSTGRES_USER: chattutor
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-devpassword}
+    volumes:
+      - chattutor_postgres_dev:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"  # Use 5433 to avoid conflicts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chattutor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - chattutor-dev
+
+  # ChatTutor Application (Development Mode)
+  app:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: chattutor-app-dev
+    restart: unless-stopped
+    ports:
+      - "3001:3000"  # Use 3001 to avoid conflicts
+    environment:
+      # Database
+      DATABASE_URL: postgresql://chattutor:${POSTGRES_PASSWORD:-devpassword}@postgres:5432/chattutor
+      
+      # AI Configuration
+      API_KEY: ${API_KEY}
+      BASE_URL: ${BASE_URL:-https://api.openai.com/v1}
+      AGENT_MODEL: ${AGENT_MODEL:-gpt-4}
+      PAINTER_MODEL: ${PAINTER_MODEL:-}
+      PROGRAMMER_MODEL: ${PROGRAMMER_MODEL:-}  # New: Programmer agent model
+      TITLE_MODEL: ${TITLE_MODEL:-}
+      
+      # OSS Configuration (Optional)
+      OSS_ENDPOINT: ${OSS_ENDPOINT:-}
+      OSS_ACCESS_KEY: ${OSS_ACCESS_KEY:-}
+      OSS_SECRET_KEY: ${OSS_SECRET_KEY:-}
+      OSS_BUCKET: ${OSS_BUCKET:-}
+      OSS_REGION: ${OSS_REGION:-}
+      
+      # Node Environment
+      NODE_ENV: development
+      
+      # Skip DB init if already done
+      SKIP_DB_INIT: ${SKIP_DB_INIT:-false}
+    volumes:
+      # Mount source for hot reload in development
+      - ./packages:/app/packages:ro
+      - ./libs:/app/libs:ro
+      - ./server:/app/server:ro
+      - ./app:/app/app:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 3s
+      start_period: 60s
+      retries: 3
+    networks:
+      - chattutor-dev
+
+volumes:
+  chattutor_postgres_dev:
+    driver: local
+
+networks:
+  chattutor-dev:
+    driver: bridge

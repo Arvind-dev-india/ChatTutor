@@ -1,0 +1,62 @@
+# Development Dockerfile for ChatTutor
+# Includes hot reload and development dependencies
+
+FROM node:20-alpine
+
+# Install pnpm
+RUN corepack enable && corepack prepare pnpm@10.8.1 --activate
+
+# Install build dependencies for native modules
+RUN apk add --no-cache python3 make g++ netcat-openbsd git
+
+WORKDIR /app
+
+# Copy package files first for better caching
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY packages/agent/package.json ./packages/agent/
+COPY packages/canvas/package.json ./packages/canvas/
+COPY packages/mermaid/package.json ./packages/mermaid/
+COPY packages/shared/package.json ./packages/shared/
+COPY packages/pkg/package.json ./packages/pkg/
+
+COPY packages-dsl/renderer-core/package.json ./packages-dsl/renderer-core/
+COPY packages-dsl/renderer-runtime/package.json ./packages-dsl/renderer-runtime/
+COPY packages-dsl/knowledge/package.json ./packages-dsl/knowledge/
+COPY packages-dsl/x/package.json ./packages-dsl/x/
+COPY packages-dsl/x-parser/package.json ./packages-dsl/x-parser/
+COPY packages-dsl/animation/package.json ./packages-dsl/animation/
+
+COPY libs/utils-canvas/package.json ./libs/utils-canvas/
+COPY libs/math/package.json ./libs/math/
+COPY libs/programming/package.json ./libs/programming/
+COPY libs/theme-default/package.json ./libs/theme-default/
+COPY libs/utils-theme/package.json ./libs/utils-theme/
+
+# Install dependencies
+RUN pnpm install
+
+# Copy all source files
+COPY . .
+
+# Copy entrypoint script
+COPY docker/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN sed -i 's/\r$//' /usr/local/bin/docker-entrypoint.sh && \
+    chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Expose the application port
+EXPOSE 3000
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV HOST=0.0.0.0
+ENV PORT=3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=60s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+
+# Set entrypoint
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+# Start in development mode
+CMD ["pnpm", "dev"]

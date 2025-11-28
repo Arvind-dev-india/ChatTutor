@@ -1,3 +1,3 @@
 export * as agent from './agent'
 export * as painter from './painter'
-export * as shared from './shared'
+export * as programmer from './programmer'
