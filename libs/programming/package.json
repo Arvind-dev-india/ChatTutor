@@ -11,7 +11,7 @@
   "dependencies": {
     "@dsl/renderer-core": "workspace:*",
     "@dsl/knowledge": "workspace:*",
-    "@lib/utils-canvas": "workspace:*",
-    "@lib/utils-theme": "workspace:*"
+    "@dsl/utils-canvas": "workspace:*",
+    "@dsl/utils-theme": "workspace:*"
   }
 }

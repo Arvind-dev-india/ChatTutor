@@ -5,7 +5,7 @@ FROM node:20-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@10.8.1 --activate
 
 # Install build dependencies for native modules
-RUN apk add --no-cache python3 make g++ netcat-openbsd
+RUN apk add --no-cache python3 make g++ netcat-openbsd git
 
 WORKDIR /app
 
@@ -26,11 +26,12 @@ COPY packages-dsl/animation/package.json ./packages-dsl/animation/
 
 COPY libs/utils-canvas/package.json ./libs/utils-canvas/
 COPY libs/math/package.json ./libs/math/
+COPY libs/programming/package.json ./libs/programming/
 COPY libs/theme-default/package.json ./libs/theme-default/
 COPY libs/utils-theme/package.json ./libs/utils-theme/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile
+RUN pnpm install
 
 # Stage 2: Builder
 FROM node:20-alpine AS builder
